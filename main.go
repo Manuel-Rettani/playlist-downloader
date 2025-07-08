@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	//playlistId := "AIzaSyDB5fMhcUD3uaYAjO9xeWtwzNSKghGsHKw"
+	//playlistId := "PLqlu7ZxfTBeiDDYv-a0NTwO6lvc4C3kBv"
 	setupEnvironment()
 	videoUrl := "https://www.youtube.com/watch?v=k-x1n5v3RvM"
 
