@@ -1,4 +1,4 @@
-module yt-playlist-downloader
+module playlist-downloader
 
 go 1.24
 
