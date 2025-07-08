@@ -1,0 +1,9 @@
+keys:
+  youtube: YOUR_YOUTUBE_APIKEY
+playlist_id: PLAYLIST_ID
+chunk_size: 50
+aws:
+  access_key_id: YOUR_ACCESS_KEY_ID
+  secret_access_key: YOUR_SECRET_ACCESS_KEY
+  s3:
+    bucket: YOUR_S3_BUCKET

@@ -15,6 +15,11 @@ type IYoutubeClient interface {
 }
 
 type YoutubeClient struct {
+	apikey string
+}
+
+func NewYoutubeClient(apikey string) *YoutubeClient {
+	return &YoutubeClient{apikey: apikey}
 }
 
 func (*YoutubeClient) FetchPlaylist(playlistId string) (*models.Playlist, error) {
