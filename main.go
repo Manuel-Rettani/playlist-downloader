@@ -19,18 +19,16 @@ func main() {
 	flag.Parse()
 	config, err := conf.FromYaml(configPath)
 	if err != nil {
+		teardownEnvironment()
 		panic(err)
 	}
 
-	youtubeClient := client.NewYoutubeClient(config.Keys.Youtube)
+	youtubeClient := client.NewYoutubeClient(config.Keys.Youtube, constants.YoutubeApiBaseUrl)
 	downloader := service.NewDownloader()
-	_ = service.NewYoutubeProcessor(youtubeClient, downloader)
-
-	videoUrl := "https://www.youtube.com/watch?v=k-x1n5v3RvM"
-
-	downloaderService := service.NewDownloader()
-	_, err = downloaderService.DownloadVideo(videoUrl)
+	youtubeProcessor := service.NewYoutubeProcessor(youtubeClient, downloader, config.ChunkSize)
+	err = youtubeProcessor.Process(config.PlayListId)
 	if err != nil {
+		teardownEnvironment()
 		panic(err)
 	}
 
@@ -38,7 +36,7 @@ func main() {
 }
 
 func setupEnvironment() {
-	log.Println("setting up environment")
+	log.Println("setting up environment...")
 	err := utils.DeleteFolder(constants.TempFolder)
 	if err != nil {
 		panic(err)

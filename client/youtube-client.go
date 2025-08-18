@@ -4,43 +4,64 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
-	"playlist-downloader/constants"
+	"net/url"
 	"playlist-downloader/models"
+	"strconv"
 	"time"
 )
 
 type IYoutubeClient interface {
-	FetchPlaylist(playlistId string) (*models.Playlist, error)
+	FetchPlaylist(playlistId string, pageSize int, pageToken *string) (*models.Playlist, error)
 }
 
 type YoutubeClient struct {
-	apikey string
+	apikey     string
+	httpClient *http.Client
+	baseUrl    string
 }
 
-func NewYoutubeClient(apikey string) *YoutubeClient {
-	return &YoutubeClient{apikey: apikey}
+func NewYoutubeClient(apikey string, baseUrl string) *YoutubeClient {
+	return &YoutubeClient{
+		apikey: apikey,
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+		baseUrl: baseUrl,
+	}
 }
 
-func (*YoutubeClient) FetchPlaylist(playlistId string) (*models.Playlist, error) {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
+func (c *YoutubeClient) FetchPlaylist(playlistId string, pageSize int, pageToken *string) (*models.Playlist, error) {
+	endpoint, err := url.Parse(fmt.Sprintf("%s/playlistItems", c.baseUrl))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse base url: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/%s", constants.YoutubeApiBaseUrl, playlistId)
-	resp, err := client.Get(url)
+	query := endpoint.Query()
+	query.Set("key", c.apikey)
+	query.Set("part", "snippet")
+	query.Set("playlistId", playlistId)
+	query.Set("maxResults", strconv.Itoa(pageSize))
+	if pageToken != nil {
+		query.Set("pageToken", *pageToken)
+	}
+	endpoint.RawQuery = query.Encode()
+
+	resp, err := c.httpClient.Get(endpoint.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-
+			log.Printf("failed to close response body: %v", err)
 		}
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status: %s, body: %s", resp.Status, string(body))
 	}
 
 	var playlist models.Playlist

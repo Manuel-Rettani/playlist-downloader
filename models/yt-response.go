@@ -1,5 +1,7 @@
 package models
 
+import "encoding/json"
+
 type Playlist struct {
 	Kind          string         `json:"kind"`
 	Etag          string         `json:"etag"`
@@ -17,17 +19,17 @@ type PlaylistItem struct {
 }
 
 type Snippet struct {
-	PublishedAt            string     `json:"publishedAt"`
-	ChannelId              string     `json:"channelId"`
-	Title                  string     `json:"title"`
-	Description            string     `json:"description"`
-	Thumbnails             string     `json:"thumbnails"`
-	ChannelTitle           string     `json:"channelTitle"`
-	PlaylistId             string     `json:"playlistId"`
-	Position               int        `json:"position"`
-	ResourceId             ResourceId `json:"resourceId"`
-	VideoOwnerChannelTitle string     `json:"videoOwnerChannelTitle"`
-	VideoOwnerChannelId    string     `json:"videoOwnerChannelId"`
+	PublishedAt            string          `json:"publishedAt"`
+	ChannelId              string          `json:"channelId"`
+	Title                  string          `json:"title"`
+	Description            string          `json:"description"`
+	Thumbnails             json.RawMessage `json:"thumbnails"`
+	ChannelTitle           string          `json:"channelTitle"`
+	PlaylistId             string          `json:"playlistId"`
+	Position               int             `json:"position"`
+	ResourceId             ResourceId      `json:"resourceId"`
+	VideoOwnerChannelTitle string          `json:"videoOwnerChannelTitle"`
+	VideoOwnerChannelId    string          `json:"videoOwnerChannelId"`
 }
 
 type ResourceId struct {

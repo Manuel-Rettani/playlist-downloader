@@ -1,0 +1,26 @@
+- recupero di tutti gli elementi da playlist con chiamata api
+- zippaggio delle canzoni (in chunk)
+- caricamento dello zip sul bucket s3
+- ripetere finchè nextPageToken in risposta da youtube non è vuoto
+- mandare una mail all'interessato con i link per scaricare i vari zip (si usa s3 così si possono scaricare da qualunque device)
+
+- valutare invece di fare uno zip unico e quindi unico link di download. Rischi trovati finora:
+    riempire spazio pc se playlist troppo grande
+
+POSSIBILI MIGLIORIE FUTURE
+
+- chiamata a chatgpt o qualche altro tool (meglio se gratuito) per recuperare i metadati di una canzone e settarli su yt-dlp per avere
+  canzoni con metadati più corretti (nome esatto canzone e artista)
+
+- dockerizzare l'applicazione (e non installare sul pc python e quant'altro)
+
+- tenere traccia da qualche parte (es tabella posgres) delle playlist già elaborate. Per fare questo, servono ulteriori controlli:
+    - Recuperare il numero di elementi attuali della playlist, se diverso rispetto a quello in tabella rielaborare tutto,
+      altrimenti si continua
+    - Elaborare in qualche modo un digest/chiave univoca da ricavare dagli id dei video della playlist ordinati
+      in ordine alfabetico, in modo da controllare se i video dentro la playlist sono diversi (un video è stato rimosso
+      ma ne è stato aggiunto un altro)
+  se questi troviamo tutto in tabella allora non elaborare nulla (conversione in mp3 e scrittura s3) e mandiamo
+  direttamente la mail coi link ai vari zip (magari salvati su un'altra tabella), altrimenti
+  eliminare dal bucket quello che è sotto la chiave youtube/{id playlist} e rielaborare tutto
+
