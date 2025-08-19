@@ -6,6 +6,7 @@ import (
 	"playlist-downloader/client"
 	"playlist-downloader/constants"
 	"playlist-downloader/models"
+	"playlist-downloader/utils"
 )
 
 type IYoutubeProcessor interface {
@@ -16,25 +17,25 @@ type YoutubeProcessor struct {
 	client     client.IYoutubeClient
 	downloader IDownloader
 	chunkSize  int
+	s3Service  IS3Service
 }
 
-func NewYoutubeProcessor(client client.IYoutubeClient, downloader IDownloader, chunkSize int) *YoutubeProcessor {
+func NewYoutubeProcessor(client client.IYoutubeClient, downloader IDownloader, chunkSize int, s3Service IS3Service) *YoutubeProcessor {
 	return &YoutubeProcessor{
 		client:     client,
 		downloader: downloader,
 		chunkSize:  chunkSize,
+		s3Service:  s3Service,
 	}
 }
 
 func (y YoutubeProcessor) Process(playlistId string) error {
-
 	playlist, err := y.client.FetchPlaylist(playlistId, y.chunkSize, nil)
 	if err != nil {
 		return err
 	}
-	playListLength := playlist.PageInfo.TotalResults
-	log.Printf("found %d videos", playListLength)
-	videoURLs := make([]string, 0, playListLength)
+	playlistLength := playlist.PageInfo.TotalResults
+	videoURLs := make([]string, 0, playlistLength)
 	fillLinkSlice(&videoURLs, playlist)
 
 	nextPageToken := playlist.NextPageToken
@@ -46,8 +47,33 @@ func (y YoutubeProcessor) Process(playlistId string) error {
 		fillLinkSlice(&videoURLs, playlist)
 		nextPageToken = playlist.NextPageToken
 	}
+	playlistLength = len(videoURLs)
+	log.Printf("found %d videos", playlistLength)
 
-	//_, err := y.downloader.DownloadVideo(videoUrl)
+	var failed []string
+	for i := 1; i < len(videoURLs) && i < 5; i++ {
+		_, err := y.downloader.DownloadVideoWithRetry(videoURLs[i-1])
+		if err != nil {
+			log.Printf("Skipping %s: %v", videoURLs[i-1], err)
+			failed = append(failed, videoURLs[i-1])
+			continue
+		}
+		if i%5 == 0 || i == len(videoURLs) {
+			log.Printf("downloaded %d/%d videos", i, playlistLength)
+		}
+	}
+
+	if len(failed) > 0 {
+		log.Printf("Failed to download %d videos:", len(failed))
+		for _, f := range failed {
+			log.Println("   ", f)
+		}
+	}
+
+	err = utils.ZipFolder("temp", fmt.Sprintf("%s.zip", playlistId))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -55,7 +81,8 @@ func (y YoutubeProcessor) Process(playlistId string) error {
 func fillLinkSlice(videoURLs *[]string, playlist *models.Playlist) {
 	for _, item := range playlist.Items {
 		videoId := item.Snippet.ResourceId.VideoId
-		if videoId != "" {
+		videoOwnerChannelId := item.Snippet.VideoOwnerChannelId
+		if videoId != "" && videoOwnerChannelId != "" {
 			url := fmt.Sprintf(constants.YoutubeVideoLinkFormat, videoId)
 			*videoURLs = append(*videoURLs, url)
 		}

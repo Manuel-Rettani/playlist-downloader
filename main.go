@@ -24,8 +24,9 @@ func main() {
 	}
 
 	youtubeClient := client.NewYoutubeClient(config.Keys.Youtube, constants.YoutubeApiBaseUrl)
-	downloader := service.NewDownloader()
-	youtubeProcessor := service.NewYoutubeProcessor(youtubeClient, downloader, config.ChunkSize)
+	downloader := service.NewDownloader(config.MaxRetries)
+	s3Service := service.NewS3Service(config.Aws.Region, config.Aws.S3.Bucket, config.Aws.AccessKey, config.Aws.SecretKey)
+	youtubeProcessor := service.NewYoutubeProcessor(youtubeClient, downloader, config.ChunkSize, s3Service)
 	err = youtubeProcessor.Process(config.PlayListId)
 	if err != nil {
 		teardownEnvironment()

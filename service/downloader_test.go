@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var downloaderService = NewDownloader()
+var downloaderService = NewDownloader(3)
 
 func TestDownload(t *testing.T) {
 	videoUrl := "https://www.youtube.com/watch?v=k-x1n5v3RvM"
