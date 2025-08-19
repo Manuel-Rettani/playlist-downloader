@@ -1,5 +1,6 @@
 - nel teardown (main) noi sappiamo già quale sarà lo zip di destinazione, rimuovere ritorno del processor e argomento da teardown
 - semplice cache, controllare se quel file è già su s3, se si mandare direttamente il link via mail altrimenti come ora
+- multithread per scaricare più velocemente
 - aggiungere la possibilità di avere più destinatari mail
 
 POSSIBILI MIGLIORIE FUTURE

@@ -53,14 +53,14 @@ func (y YoutubeProcessor) Process(playlistId string) (string, error) {
 	log.Printf("found %d videos", playlistLength)
 
 	var failed []string
-	for i := 1; i < len(videoURLs); i++ {
+	for i := 1; i <= playlistLength; i++ {
 		_, err := y.downloader.DownloadVideoWithRetry(videoURLs[i-1])
 		if err != nil {
 			log.Printf("Skipping %s: %v", videoURLs[i-1], err)
 			failed = append(failed, videoURLs[i-1])
 			continue
 		}
-		if i%5 == 0 || i == len(videoURLs) {
+		if i%5 == 0 || i == playlistLength {
 			log.Printf("downloaded %d/%d videos", i, playlistLength)
 		}
 	}
