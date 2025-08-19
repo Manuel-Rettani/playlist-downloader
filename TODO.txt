@@ -1,11 +1,7 @@
-- recupero di tutti gli elementi da playlist con chiamata api
-- zippaggio delle canzoni (in chunk)
+- recupero di tutti gli elementi da playlist con chiamata api (OK)
+- zippaggio delle canzoni
 - caricamento dello zip sul bucket s3
-- ripetere finchè nextPageToken in risposta da youtube non è vuoto
-- mandare una mail all'interessato con i link per scaricare i vari zip (si usa s3 così si possono scaricare da qualunque device)
-
-- valutare invece di fare uno zip unico e quindi unico link di download. Rischi trovati finora:
-    riempire spazio pc se playlist troppo grande
+- mandare una mail all'interessato con il link per scaricarelo zip (si usa s3 così si possono scaricare da qualunque device)
 
 POSSIBILI MIGLIORIE FUTURE
 

@@ -17,12 +17,14 @@ func TestFromYaml(t *testing.T) {
 		PlayListId: "PLqlu7ZxfTBeiDDYv-a0NTwO6lvc4C3kBv",
 		ChunkSize:  50,
 		Aws: Aws{
+			Region:    "eu-north-1",
 			AccessKey: "AKIApppppp",
 			SecretKey: "AKIAssssssssss",
 			S3: S3{
 				Bucket: "super-s3-bucket",
 			},
 		},
+		MaxRetries: 3,
 	}
 	require.Equal(t, expected, conf)
 }

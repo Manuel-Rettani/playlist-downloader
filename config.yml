@@ -5,5 +5,7 @@ chunk_size: 50
 aws:
   access_key_id: YOUR_ACCESS_KEY_ID
   secret_access_key: YOUR_SECRET_ACCESS_KEY
+  region: YOUR_AWS_REGION
   s3:
     bucket: YOUR_S3_BUCKET
+max_retries: 3

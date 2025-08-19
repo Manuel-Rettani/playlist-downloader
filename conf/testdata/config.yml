@@ -3,7 +3,9 @@ keys:
 playlist_id: PLqlu7ZxfTBeiDDYv-a0NTwO6lvc4C3kBv
 chunk_size: 50
 aws:
+  region: eu-north-1
   access_key_id: AKIApppppp
   secret_access_key: AKIAssssssssss
   s3:
     bucket: super-s3-bucket
+max_retries: 3
