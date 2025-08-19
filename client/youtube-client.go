@@ -13,7 +13,8 @@ import (
 )
 
 type IYoutubeClient interface {
-	FetchPlaylist(playlistId string, pageSize int, pageToken *string) (*models.Playlist, error)
+	FetchPlaylist(playlistId string, pageSize int, pageToken *string) (*models.YoutubeResponse, error)
+	GetPlaylistInfo(playlistId string) (*models.YoutubeResponse, error)
 }
 
 type YoutubeClient struct {
@@ -32,12 +33,8 @@ func NewYoutubeClient(apikey string, baseUrl string) *YoutubeClient {
 	}
 }
 
-func (c *YoutubeClient) FetchPlaylist(playlistId string, pageSize int, pageToken *string) (*models.Playlist, error) {
-	endpoint, err := url.Parse(fmt.Sprintf("%s/playlistItems", c.baseUrl))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse base url: %w", err)
-	}
-
+func (c *YoutubeClient) FetchPlaylist(playlistId string, pageSize int, pageToken *string) (*models.YoutubeResponse, error) {
+	endpoint, _ := url.Parse(fmt.Sprintf("%s/playlistItems", c.baseUrl))
 	query := endpoint.Query()
 	query.Set("key", c.apikey)
 	query.Set("part", "snippet")
@@ -64,10 +61,42 @@ func (c *YoutubeClient) FetchPlaylist(playlistId string, pageSize int, pageToken
 		return nil, fmt.Errorf("unexpected status: %s, body: %s", resp.Status, string(body))
 	}
 
-	var playlist models.Playlist
+	var playlist models.YoutubeResponse
 	if err := json.NewDecoder(resp.Body).Decode(&playlist); err != nil {
 		return nil, fmt.Errorf("failed to decode JSON: %w", err)
 	}
 
 	return &playlist, nil
+}
+
+func (c *YoutubeClient) GetPlaylistInfo(playlistId string) (*models.YoutubeResponse, error) {
+	endpoint, _ := url.Parse(fmt.Sprintf("%s/playlists", c.baseUrl))
+	query := endpoint.Query()
+	query.Set("key", c.apikey)
+	query.Set("part", "id,snippet")
+	query.Set("id", playlistId)
+	endpoint.RawQuery = query.Encode()
+
+	resp, err := c.httpClient.Get(endpoint.String())
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Printf("failed to close response body: %v", err)
+		}
+	}(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status: %s, body: %s", resp.Status, string(body))
+	}
+
+	var playlistInfo models.YoutubeResponse
+	if err := json.NewDecoder(resp.Body).Decode(&playlistInfo); err != nil {
+		return nil, fmt.Errorf("failed to decode JSON: %w", err)
+	}
+
+	return &playlistInfo, nil
 }

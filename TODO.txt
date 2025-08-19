@@ -1,7 +1,6 @@
-- recupero di tutti gli elementi da playlist con chiamata api (OK)
-- zippaggio delle canzoni
-- caricamento dello zip sul bucket s3
-- mandare una mail all'interessato con il link per scaricarelo zip (si usa s3 così si possono scaricare da qualunque device)
+- nel teardown (main) noi sappiamo già quale sarà lo zip di destinazione, rimuovere ritorno del processor e argomento da teardown
+- semplice cache, controllare se quel file è già su s3, se si mandare direttamente il link via mail altrimenti come ora
+- aggiungere la possibilità di avere più destinatari mail
 
 POSSIBILI MIGLIORIE FUTURE
 

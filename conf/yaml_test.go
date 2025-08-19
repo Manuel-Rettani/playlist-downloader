@@ -23,6 +23,13 @@ func TestFromYaml(t *testing.T) {
 			},
 		},
 		MaxRetries: 3,
+		Email: Email{
+			Email:       "email@gmail.com",
+			AppPassword: "fake_password_12351232",
+			SmtpServer:  "smtp.gmail.com",
+			SmtpPort:    587,
+		},
+		RequesterEmail: "email2@gmail.com",
 	}
 	require.Equal(t, expected, conf)
 }

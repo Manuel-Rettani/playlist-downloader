@@ -26,7 +26,8 @@ func main() {
 	youtubeClient := client.NewYoutubeClient(config.YoutubeKey, constants.YoutubeApiBaseUrl)
 	downloader := service.NewDownloader(config.MaxRetries)
 	s3Service := service.NewS3Service(config.Aws.Region, config.Aws.S3.Bucket, config.Aws.AccessKey, config.Aws.SecretKey)
-	youtubeProcessor := service.NewYoutubeProcessor(youtubeClient, downloader, config.ChunkSize, s3Service)
+	mailService := service.NewMailService(config.Email.SmtpServer, config.Email.SmtpPort, config.Email.Email, config.Email.AppPassword, config.RequesterEmail)
+	youtubeProcessor := service.NewYoutubeProcessor(youtubeClient, downloader, config.ChunkSize, s3Service, mailService)
 	zipName, err := youtubeProcessor.Process(config.PlayListId)
 	if err != nil {
 		teardownEnvironment(nil)

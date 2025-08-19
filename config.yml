@@ -8,3 +8,9 @@ aws:
   s3:
     bucket: YOUR_S3_BUCKET
 max_retries: 3
+email:
+  email: YOUR_EMAIL
+  app_password: YOUR_EMAIL_APP_PASSWORD
+  smtp_server: SMTP_SERVER
+  smtp_server_port: SMTP_SERVER_PORT
+requester_email: PLAYLIST_DOWNLOAD_REQUESTER_EMAIL

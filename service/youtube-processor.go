@@ -14,18 +14,20 @@ type IYoutubeProcessor interface {
 }
 
 type YoutubeProcessor struct {
-	client     client.IYoutubeClient
-	downloader IDownloader
-	chunkSize  int
-	s3Service  IS3Service
+	client      client.IYoutubeClient
+	downloader  IDownloader
+	chunkSize   int
+	s3Service   IS3Service
+	mailService IMailService
 }
 
-func NewYoutubeProcessor(client client.IYoutubeClient, downloader IDownloader, chunkSize int, s3Service IS3Service) *YoutubeProcessor {
+func NewYoutubeProcessor(client client.IYoutubeClient, downloader IDownloader, chunkSize int, s3Service IS3Service, mailService IMailService) *YoutubeProcessor {
 	return &YoutubeProcessor{
-		client:     client,
-		downloader: downloader,
-		chunkSize:  chunkSize,
-		s3Service:  s3Service,
+		client:      client,
+		downloader:  downloader,
+		chunkSize:   chunkSize,
+		s3Service:   s3Service,
+		mailService: mailService,
 	}
 }
 
@@ -51,7 +53,7 @@ func (y YoutubeProcessor) Process(playlistId string) (string, error) {
 	log.Printf("found %d videos", playlistLength)
 
 	var failed []string
-	for i := 1; i < len(videoURLs) && i < 5; i++ {
+	for i := 1; i < len(videoURLs); i++ {
 		_, err := y.downloader.DownloadVideoWithRetry(videoURLs[i-1])
 		if err != nil {
 			log.Printf("Skipping %s: %v", videoURLs[i-1], err)
@@ -78,7 +80,17 @@ func (y YoutubeProcessor) Process(playlistId string) (string, error) {
 	}
 
 	log.Println("Uploading zip file to S3...")
-	err = y.s3Service.Upload(zipName)
+	fileLink, err := y.s3Service.Upload(zipName)
+	if err != nil {
+		return "", err
+	}
+
+	playlistInfo, err := y.client.GetPlaylistInfo(playlistId)
+	if err != nil {
+		return "", err
+	}
+
+	err = y.mailService.SendMail(fileLink, playlistInfo.Items[0].Snippet.Title)
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +98,7 @@ func (y YoutubeProcessor) Process(playlistId string) (string, error) {
 	return zipName, nil
 }
 
-func fillLinkSlice(videoURLs *[]string, playlist *models.Playlist) {
+func fillLinkSlice(videoURLs *[]string, playlist *models.YoutubeResponse) {
 	for _, item := range playlist.Items {
 		videoId := item.Snippet.ResourceId.VideoId
 		videoOwnerChannelId := item.Snippet.VideoOwnerChannelId

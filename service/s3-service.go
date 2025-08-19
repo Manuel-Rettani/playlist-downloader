@@ -14,10 +14,11 @@ import (
 )
 
 type IS3Service interface {
-	Upload(filePath string) error
+	Upload(filePath string) (string, error)
 }
 
 type S3Service struct {
+	region     string
 	bucketName string
 	client     *s3.Client
 }
@@ -32,12 +33,13 @@ func NewS3Service(region string, bucketName string, accessKey string, secretKey 
 	}
 	s3Client := s3.NewFromConfig(cfg)
 	return &S3Service{
+		region:     region,
 		bucketName: bucketName,
 		client:     s3Client,
 	}
 }
 
-func (s S3Service) Upload(fileName string) error {
+func (s S3Service) Upload(fileName string) (string, error) {
 	file, err := filepath.Abs(fileName)
 	if err != nil {
 		log.Fatalf("failed to resolve file path: %v", err)
@@ -54,7 +56,7 @@ func (s S3Service) Upload(fileName string) error {
 		Body:   strings.NewReader(string(fileBytes)),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to upload file: %v", err)
+		return "", fmt.Errorf("failed to upload file: %v", err)
 	}
-	return nil
+	return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", s.bucketName, s.region, fileName), nil
 }

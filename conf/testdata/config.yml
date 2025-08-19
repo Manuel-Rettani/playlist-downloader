@@ -8,3 +8,9 @@ aws:
   s3:
     bucket: super-s3-bucket
 max_retries: 3
+email:
+  email: email@gmail.com
+  app_password: fake_password_12351232
+  smtp_server: smtp.gmail.com
+  smtp_port: 587
+requester_email: email2@gmail.com

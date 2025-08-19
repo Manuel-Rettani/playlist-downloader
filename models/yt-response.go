@@ -1,17 +1,15 @@
 package models
 
-import "encoding/json"
-
-type Playlist struct {
-	Kind          string         `json:"kind"`
-	Etag          string         `json:"etag"`
-	NextPageToken string         `json:"nextPageToken"`
-	PrevPageToken string         `json:"prevPageToken"`
-	Items         []PlaylistItem `json:"items"`
-	PageInfo      PageInfo       `json:"pageInfo"`
+type YoutubeResponse struct {
+	Kind          string   `json:"kind"`
+	Etag          string   `json:"etag"`
+	NextPageToken string   `json:"nextPageToken"`
+	PrevPageToken string   `json:"prevPageToken"`
+	Items         []Item   `json:"items"`
+	PageInfo      PageInfo `json:"pageInfo"`
 }
 
-type PlaylistItem struct {
+type Item struct {
 	Kind    string  `json:"kind"`
 	Etag    string  `json:"etag"`
 	Id      string  `json:"id"`
@@ -19,17 +17,17 @@ type PlaylistItem struct {
 }
 
 type Snippet struct {
-	PublishedAt            string          `json:"publishedAt"`
-	ChannelId              string          `json:"channelId"`
-	Title                  string          `json:"title"`
-	Description            string          `json:"description"`
-	Thumbnails             json.RawMessage `json:"thumbnails"`
-	ChannelTitle           string          `json:"channelTitle"`
-	PlaylistId             string          `json:"playlistId"`
-	Position               int             `json:"position"`
-	ResourceId             ResourceId      `json:"resourceId"`
-	VideoOwnerChannelTitle string          `json:"videoOwnerChannelTitle"`
-	VideoOwnerChannelId    string          `json:"videoOwnerChannelId"`
+	PublishedAt            string     `json:"publishedAt"`
+	ChannelId              string     `json:"channelId"`
+	Title                  string     `json:"title"`
+	Description            string     `json:"description"`
+	ChannelTitle           string     `json:"channelTitle"`
+	PlaylistId             string     `json:"playlistId"`
+	Position               int        `json:"position"`
+	ResourceId             ResourceId `json:"resourceId"`
+	VideoOwnerChannelTitle string     `json:"videoOwnerChannelTitle"`
+	VideoOwnerChannelId    string     `json:"videoOwnerChannelId"`
+	Localized              Localized  `json:"localized"`
 }
 
 type ResourceId struct {
@@ -40,4 +38,9 @@ type ResourceId struct {
 type PageInfo struct {
 	TotalResults   int `json:"totalResults"`
 	ResultsPerPage int `json:"resultsPerPage"`
+}
+
+type Localized struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
