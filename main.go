@@ -19,21 +19,21 @@ func main() {
 	flag.Parse()
 	config, err := conf.FromYaml(configPath)
 	if err != nil {
-		teardownEnvironment()
+		teardownEnvironment(nil)
 		panic(err)
 	}
 
-	youtubeClient := client.NewYoutubeClient(config.Keys.Youtube, constants.YoutubeApiBaseUrl)
+	youtubeClient := client.NewYoutubeClient(config.YoutubeKey, constants.YoutubeApiBaseUrl)
 	downloader := service.NewDownloader(config.MaxRetries)
 	s3Service := service.NewS3Service(config.Aws.Region, config.Aws.S3.Bucket, config.Aws.AccessKey, config.Aws.SecretKey)
 	youtubeProcessor := service.NewYoutubeProcessor(youtubeClient, downloader, config.ChunkSize, s3Service)
-	err = youtubeProcessor.Process(config.PlayListId)
+	zipName, err := youtubeProcessor.Process(config.PlayListId)
 	if err != nil {
-		teardownEnvironment()
+		teardownEnvironment(nil)
 		panic(err)
 	}
 
-	teardownEnvironment()
+	teardownEnvironment(&zipName)
 }
 
 func setupEnvironment() {
@@ -49,11 +49,17 @@ func setupEnvironment() {
 	log.Println("setting up environment done")
 }
 
-func teardownEnvironment() {
+func teardownEnvironment(zipName *string) {
 	log.Println("Cleaning temp files...")
 	err := utils.DeleteFolder(constants.TempFolder)
 	if err != nil {
 		panic(err)
+	}
+	if zipName != nil {
+		err = utils.DeleteFolder(*zipName)
+		if err != nil {
+			panic(err)
+		}
 	}
 	log.Println("Execution completed")
 }

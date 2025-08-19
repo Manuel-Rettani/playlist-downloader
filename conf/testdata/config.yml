@@ -1,5 +1,4 @@
-keys:
-  youtube: youtube-key-xoaowusdqkjdndasdfiuuuum
+youtube_key: youtube-key-xoaowusdqkjdndasdfiuuuum
 playlist_id: PLqlu7ZxfTBeiDDYv-a0NTwO6lvc4C3kBv
 chunk_size: 50
 aws:

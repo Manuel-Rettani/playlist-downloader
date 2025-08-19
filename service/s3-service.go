@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"playlist-downloader/utils"
 	"strings"
 )
 
@@ -38,9 +37,8 @@ func NewS3Service(region string, bucketName string, accessKey string, secretKey 
 	}
 }
 
-func (s S3Service) Upload(filePath string) error {
-	keyName := utils.GetFileName(filePath)
-	file, err := filepath.Abs(filePath)
+func (s S3Service) Upload(fileName string) error {
+	file, err := filepath.Abs(fileName)
 	if err != nil {
 		log.Fatalf("failed to resolve file path: %v", err)
 	}
@@ -52,7 +50,7 @@ func (s S3Service) Upload(filePath string) error {
 
 	_, err = s.client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(s.bucketName),
-		Key:    aws.String(keyName),
+		Key:    aws.String(fileName),
 		Body:   strings.NewReader(string(fileBytes)),
 	})
 	if err != nil {

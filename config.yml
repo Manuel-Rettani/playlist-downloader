@@ -1,5 +1,4 @@
-keys:
-  youtube: YOUR_YOUTUBE_APIKEY
+youtube_key: YOUR_YOUTUBE_APIKEY
 playlist_id: PLAYLIST_ID
 chunk_size: 50
 aws:

@@ -33,6 +33,12 @@ func TestDeleteFolderFolderNotExists(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestDeleteFolderIsAFile(t *testing.T) {
+	err := os.WriteFile("tempfile.txt", []byte("hello"), 0644)
+	err = DeleteFolder("tempfile.txt")
+	require.NoError(t, err)
+}
+
 func TestZipFolder(t *testing.T) {
 	sourceDir := "test"
 	err := CreateFolder(sourceDir)

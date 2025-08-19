@@ -1,15 +1,11 @@
 package conf
 
 type Conf struct {
-	Keys       Keys   `json:"keys" yaml:"keys"`
+	YoutubeKey string `json:"youtube_key" yaml:"youtube_key"`
 	PlayListId string `json:"playlist_id" yaml:"playlist_id"`
 	ChunkSize  int    `json:"chunk_size" yaml:"chunk_size"`
 	Aws        Aws    `json:"aws" yaml:"aws"`
 	MaxRetries int    `json:"max_retries" yaml:"max_retries"`
-}
-
-type Keys struct {
-	Youtube string `json:"youtube" yaml:"youtube"`
 }
 
 type Aws struct {

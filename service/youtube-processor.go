@@ -29,10 +29,10 @@ func NewYoutubeProcessor(client client.IYoutubeClient, downloader IDownloader, c
 	}
 }
 
-func (y YoutubeProcessor) Process(playlistId string) error {
+func (y YoutubeProcessor) Process(playlistId string) (string, error) {
 	playlist, err := y.client.FetchPlaylist(playlistId, y.chunkSize, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 	playlistLength := playlist.PageInfo.TotalResults
 	videoURLs := make([]string, 0, playlistLength)
@@ -42,7 +42,7 @@ func (y YoutubeProcessor) Process(playlistId string) error {
 	for nextPageToken != "" {
 		playlist, err = y.client.FetchPlaylist(playlistId, y.chunkSize, &nextPageToken)
 		if err != nil {
-			return err
+			return "", err
 		}
 		fillLinkSlice(&videoURLs, playlist)
 		nextPageToken = playlist.NextPageToken
@@ -70,12 +70,20 @@ func (y YoutubeProcessor) Process(playlistId string) error {
 		}
 	}
 
-	err = utils.ZipFolder("temp", fmt.Sprintf("%s.zip", playlistId))
+	log.Println("Creating zip file...")
+	zipName := fmt.Sprintf("%s.zip", playlistId)
+	err = utils.ZipFolder("temp", zipName)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	log.Println("Uploading zip file to S3...")
+	err = y.s3Service.Upload(zipName)
+	if err != nil {
+		return "", err
+	}
+
+	return zipName, nil
 }
 
 func fillLinkSlice(videoURLs *[]string, playlist *models.Playlist) {

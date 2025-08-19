@@ -11,9 +11,7 @@ func TestFromYaml(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := Conf{
-		Keys: Keys{
-			Youtube: "youtube-key-xoaowusdqkjdndasdfiuuuum",
-		},
+		YoutubeKey: "youtube-key-xoaowusdqkjdndasdfiuuuum",
 		PlayListId: "PLqlu7ZxfTBeiDDYv-a0NTwO6lvc4C3kBv",
 		ChunkSize:  50,
 		Aws: Aws{
