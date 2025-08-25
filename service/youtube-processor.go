@@ -7,6 +7,8 @@ import (
 	"playlist-downloader/constants"
 	"playlist-downloader/models"
 	"playlist-downloader/utils"
+	"sync"
+	"sync/atomic"
 )
 
 type IYoutubeProcessor interface {
@@ -37,8 +39,8 @@ func (y YoutubeProcessor) Process(playlistId string) (string, error) {
 		return "", err
 	}
 	playlistLength := playlist.PageInfo.TotalResults
-	videoURLs := make([]string, 0, playlistLength)
-	fillLinkSlice(&videoURLs, playlist)
+	videoUrls := make([]string, 0, playlistLength)
+	fillLinkSlice(&videoUrls, playlist)
 
 	nextPageToken := playlist.NextPageToken
 	for nextPageToken != "" {
@@ -46,31 +48,13 @@ func (y YoutubeProcessor) Process(playlistId string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		fillLinkSlice(&videoURLs, playlist)
+		fillLinkSlice(&videoUrls, playlist)
 		nextPageToken = playlist.NextPageToken
 	}
-	playlistLength = len(videoURLs)
+	playlistLength = len(videoUrls)
 	log.Printf("found %d videos", playlistLength)
 
-	var failed []string
-	for i := 1; i <= playlistLength; i++ {
-		_, err := y.downloader.DownloadVideoWithRetry(videoURLs[i-1])
-		if err != nil {
-			log.Printf("Skipping %s: %v", videoURLs[i-1], err)
-			failed = append(failed, videoURLs[i-1])
-			continue
-		}
-		if i%5 == 0 || i == playlistLength {
-			log.Printf("downloaded %d/%d videos", i, playlistLength)
-		}
-	}
-
-	if len(failed) > 0 {
-		log.Printf("Failed to download %d videos:", len(failed))
-		for _, f := range failed {
-			log.Println("   ", f)
-		}
-	}
+	y.downloadVideos(playlistLength, videoUrls)
 
 	log.Println("Creating zip file...")
 	zipName := fmt.Sprintf("%s.zip", playlistId)
@@ -105,6 +89,60 @@ func fillLinkSlice(videoURLs *[]string, playlist *models.YoutubeResponse) {
 		if videoId != "" && videoOwnerChannelId != "" {
 			url := fmt.Sprintf(constants.YoutubeVideoLinkFormat, videoId)
 			*videoURLs = append(*videoURLs, url)
+		}
+	}
+}
+
+func (y YoutubeProcessor) downloadVideos(playlistLength int, videoUrls []string) {
+	log.Println("Starting download...")
+
+	var downloadCounter int32
+	var wg sync.WaitGroup
+	urls := make(chan string, playlistLength)
+	failed := make(chan string, playlistLength)
+	numWorkers := 5
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go y.downloadWorker(urls, failed, &wg, &downloadCounter, playlistLength)
+	}
+	for _, url := range videoUrls {
+		urls <- url
+	}
+	close(urls)
+
+	wg.Wait()
+	close(failed)
+
+	var failedList []string
+	for f := range failed {
+		failedList = append(failedList, f)
+	}
+
+	if len(failedList) > 0 {
+		log.Printf("Failed to download %d videos:", len(failedList))
+		for _, f := range failedList {
+			log.Println("   ", f)
+		}
+	}
+}
+
+func (y YoutubeProcessor) downloadWorker(
+	urls <-chan string,
+	failed chan<- string,
+	wg *sync.WaitGroup,
+	downloadCounter *int32,
+	playlistLength int,
+) {
+	defer wg.Done()
+	for url := range urls {
+		_, err := y.downloader.DownloadVideoWithRetry(url)
+		done := atomic.AddInt32(downloadCounter, 1)
+		if err != nil {
+			failed <- url
+		}
+
+		if done%5 == 0 || int(done) == playlistLength {
+			log.Printf("Downloaded %d/%d videos", done, playlistLength)
 		}
 	}
 }
